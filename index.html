@@ -60,7 +60,7 @@
     });
 
     async function getRoute(start, end) {
-      const apiKey = 'YOUR_API_KEY'; // Replace with your OpenRouteService API key
+      const apiKey = '5b3ce3597851110001cf624824b1456eb23945dc8552f3d7897b2554'; // Replace with your OpenRouteService API key
       const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`;
       try {
         const response = await fetch(url);
