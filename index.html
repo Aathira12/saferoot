@@ -109,20 +109,66 @@
       }
     }
 
-    async function checkRoute() {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/check_route');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        alert(`Path suitability: ${data.suitability}\n` +
-              `Number of vehicles with speed less than 30 km/h: ${data.slow_vehicles_count}\n` +
-              `Number of vehicles with speed 30 km/h or higher: ${data.fast_vehicles_count}\n` +
-              `Number of vehicles that have rerouted their paths: ${data.rerouted_vehicles_count}`);
-      } catch (error) {
-        alert('Error checking the route: ' + error.message);
-      }
+    function checkRoute() {
+      const np_random_seed = 42;
+      const vehicle_ids = Array.from({ length: 10 }, (_, i) => `vehicle_${i + 1}`);
+      const start_times = Array.from({ length: 10 }, (_, i) => new Date(2024, 6, 19, 8, i * 10));
+      const end_times = start_times.map((startTime, i) => {
+        const minutes = Math.floor(Math.random() * (15 - 5) + 5);
+        return new Date(startTime.getTime() + minutes * 60000);
+      });
+      const speeds = [...Array(3).fill().map(() => Math.random() * (60 - 50) + 50), ...Array(7).fill().map(() => Math.random() * (30 - 20) + 20)];
+
+      const data = {
+        vehicle_id: vehicle_ids,
+        start_time: start_times,
+        end_time: end_times,
+        start_lat: Array.from({ length: 10 }, () => 34.0500 + Math.random() * 0.001),
+        start_lon: Array.from({ length: 10 }, () => -118.2450 + Math.random() * 0.001),
+        end_lat: Array.from({ length: 10 }, () => 34.0530 + Math.random() * 0.001),
+        end_lon: Array.from({ length: 10 }, () => -118.2420 + Math.random() * 0.001),
+        speed_kmh: speeds
+      };
+
+      const df = data.vehicle_id.map((id, index) => {
+        const timeTaken = (data.end_time[index] - data.start_time[index]) / 60000;
+        const distanceKm = data.speed_kmh[index] * (timeTaken / 60);
+        return {
+          vehicle_id: id,
+          start_time: data.start_time[index],
+          end_time: data.end_time[index],
+          start_lat: data.start_lat[index],
+          start_lon: data.start_lon[index],
+          end_lat: data.end_lat[index],
+          end_lon: data.end_lon[index],
+          speed_kmh: data.speed_kmh[index],
+          time_taken: timeTaken,
+          distance_km: distanceKm
+        };
+      });
+
+      const slowerVehicles = df.filter(vehicle => vehicle.speed_kmh < 30);
+      const numVehicles = df.length;
+      const numRerouted = Math.max(1, Math.floor(numVehicles / 2) + 1);
+      const reroutedVehicles = slowerVehicles.sort(() => 0.5 - Math.random()).slice(0, numRerouted);
+
+      reroutedVehicles.forEach(vehicle => {
+        vehicle.start_lat += (Math.random() * 0.002 - 0.001);
+        vehicle.start_lon += (Math.random() * 0.002 - 0.001);
+        vehicle.end_lat += (Math.random() * 0.002 - 0.001);
+        vehicle.end_lon += (Math.random() * 0.002 - 0.001);
+      });
+
+      const slowVehiclesCount = df.filter(vehicle => vehicle.speed_kmh < 30).length;
+      const fastVehiclesCount = df.filter(vehicle => vehicle.speed_kmh >= 30).length;
+      const reroutedVehiclesCount = reroutedVehicles.length;
+
+      const suitability = (reroutedVehiclesCount < Math.floor(numVehicles / 2) && fastVehiclesCount > 0) ? "suitable for travel" : "not suitable for travel";
+
+      alert(`Path suitability: ${suitability}\n` +
+            `Number of vehicles with speed less than 30 km/h: ${slowVehiclesCount}\n` +
+            `Number of vehicles with speed 30 km/h or higher: ${fastVehiclesCount}\n` +
+            `Number of vehicles that have rerouted their paths: ${reroutedVehiclesCount}`);
     }
 
     const hazards = [
