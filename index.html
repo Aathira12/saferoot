@@ -46,12 +46,9 @@
 
     let userLatLng;
 
-    // Get user's current location and set the map view
     navigator.geolocation.getCurrentPosition(position => {
       userLatLng = [position.coords.latitude, position.coords.longitude];
       map.setView(userLatLng, 13);
-
-      // Add a marker for the user's location
       L.marker(userLatLng).addTo(map)
         .bindPopup('You are here')
         .openPopup();
@@ -61,7 +58,7 @@
     });
 
     async function getRoute(start, end) {
-      const apiKey = '5b3ce3597851110001cf624824b1456eb23945dc8552f3d7897b2554Y'; // Replace with your OpenRouteService API key
+      const apiKey = '5b3ce3597851110001cf624824b1456eb23945dc8552f3d7897b2554Y';
       const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`;
       try {
         const response = await fetch(url);
@@ -97,12 +94,10 @@
       try {
         const route = await getRoute(userLatLng, end);
 
-        // Clear any existing routes from the map
         if (window.routeLayer) {
           map.removeLayer(window.routeLayer);
         }
 
-        // Add the new route to the map
         window.routeLayer = L.geoJSON(route, {
           style: {
             color: 'blue',
