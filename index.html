@@ -33,6 +33,7 @@
   <div class="controls">
     <input type="text" id="end" placeholder="End Location (lat,lng)" />
     <button onclick="displayRoute()">Get Route</button>
+    <button onclick="checkRoute()">Check Route Suitability</button>
   </div>
   <div id="map"></div>
 
@@ -60,7 +61,7 @@
     });
 
     async function getRoute(start, end) {
-      const apiKey = '5b3ce3597851110001cf624824b1456eb23945dc8552f3d7897b2554'; // Replace with your OpenRouteService API key
+      const apiKey = '5b3ce3597851110001cf624824b1456eb23945dc8552f3d7897b2554Y'; // Replace with your OpenRouteService API key
       const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`;
       try {
         const response = await fetch(url);
@@ -110,6 +111,22 @@
         }).addTo(map);
       } catch (error) {
         alert('Error fetching the route: ' + error.message);
+      }
+    }
+
+    async function checkRoute() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/check_route');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        alert(`Path suitability: ${data.suitability}\n` +
+              `Number of vehicles with speed less than 30 km/h: ${data.slow_vehicles_count}\n` +
+              `Number of vehicles with speed 30 km/h or higher: ${data.fast_vehicles_count}\n` +
+              `Number of vehicles that have rerouted their paths: ${data.rerouted_vehicles_count}`);
+      } catch (error) {
+        alert('Error checking the route: ' + error.message);
       }
     }
 
